@@ -23,6 +23,8 @@ from typing import List, Optional
 import torch
 import torch.nn as nn
 
+from ai_candlestick_trader.exceptions import ModelNotLoadedError
+
 
 class EnsembleModel(nn.Module):
     """
@@ -97,7 +99,10 @@ class EnsembleModel(nn.Module):
         models = []
         for path in paths:
             m = model_cls(**model_kwargs)
-            ckpt = torch.load(path, map_location=device, weights_only=False)
+            try:
+                ckpt = torch.load(path, map_location=device, weights_only=False)
+            except Exception as e:
+                raise ModelNotLoadedError(f"Failed to load checkpoint {path}: {e}")
             state = ckpt.get("model_state_dict", ckpt)
             m.load_state_dict(state)
             m.to(device)

@@ -26,6 +26,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from ai_candlestick_trader.exceptions import (
+    DataDownloadError,
+    InsufficientDataError,
+    ModelNotLoadedError,
+)
+
 app = FastAPI(
     title="AI Candlestick Trader API",
     version="2.0.0",
@@ -206,7 +212,7 @@ def analyze_ticker(req: TickerRequest):
     try:
         from ai_candlestick_trader.data.downloader import download_ohlc
         ohlc_df = download_ohlc(req.ticker, period=req.period, interval=req.interval)
-    except ValueError as e:
+    except DataDownloadError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Download error: {e}")
@@ -215,6 +221,10 @@ def analyze_ticker(req: TickerRequest):
         result = _run_pipeline(ohlc_df, req.seq_len, req.threshold)
         result["ticker"] = req.ticker
         return JSONResponse(result)
+    except InsufficientDataError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except ModelNotLoadedError as e:
+        raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Pipeline error: {e}")
 
@@ -241,5 +251,9 @@ def analyze_ohlc(req: OHLCRequest):
     try:
         result = _run_pipeline(ohlc_df, req.seq_len, req.threshold)
         return JSONResponse(result)
+    except InsufficientDataError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except ModelNotLoadedError as e:
+        raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Pipeline error: {e}")

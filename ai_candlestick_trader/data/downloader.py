@@ -16,6 +16,8 @@ from typing import Optional
 import pandas as pd
 import yfinance as yf
 
+from ai_candlestick_trader.exceptions import DataDownloadError
+
 logger = logging.getLogger(__name__)
 
 # ── Well-known EGX 30 tickers (Yahoo Finance format) ──────────────────────────
@@ -85,7 +87,7 @@ def download_ohlc(
     df = yf.download(**kwargs)
 
     if df.empty:
-        raise ValueError(
+        raise DataDownloadError(
             f"No data returned for ticker '{ticker}'. "
             "Check the symbol (EGX → .CA suffix, Tadawul → .SR suffix)."
         )
