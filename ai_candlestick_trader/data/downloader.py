@@ -73,7 +73,7 @@ def download_ohlc(
     pd.DataFrame with columns ``[Open, High, Low, Close, Volume]``
     and a ``DatetimeIndex``.  Raises ``ValueError`` if data is empty.
     """
-    kwargs: dict = dict(ticker=ticker, interval=interval, auto_adjust=True, progress=False)
+    kwargs: dict = dict(tickers=ticker, interval=interval, auto_adjust=True, progress=False)
     if start:
         kwargs["start"] = start
         if end:
